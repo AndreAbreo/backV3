@@ -26,7 +26,7 @@ public class EquipoBean implements EquipoRemote {
     //se cambia em.persist() por em.merge()
     @Override
     public void crearEquipo(EquipoDto equipo) {
-        em.merge(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
+        em.persist(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
         em.flush();
     }
 

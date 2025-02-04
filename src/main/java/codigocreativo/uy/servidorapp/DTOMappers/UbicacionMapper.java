@@ -8,7 +8,7 @@ import java.util.List;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.JAKARTA_CDI)
 public interface UbicacionMapper {
-    Ubicacion toEntity(UbicacionDto ubicacionDto);
+    Ubicacion toEntity(UbicacionDto ubicacionDto, @Context CycleAvoidingMappingContext context);
 
     UbicacionDto toDto(Ubicacion ubicacion);
 

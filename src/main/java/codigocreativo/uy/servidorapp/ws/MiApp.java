@@ -19,6 +19,7 @@ public class MiApp extends Application {
         resources.add(JwtTokenFilter.class); // Asegúrate de que el filtro esté registrado
         resources.add(EquipoResource.class);
         resources.add(UsuarioResource.class);
+        resources.add(UbicacionesResource.class);
         return resources;
     }
 }

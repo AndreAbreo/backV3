@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
 import codigocreativo.uy.servidorapp.DTO.UbicacionDto;
+import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.DTOMappers.EquipoMapper;
 import codigocreativo.uy.servidorapp.DTOMappers.UbicacionMapper;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
@@ -28,7 +29,7 @@ public class UbicacionBean implements UbicacionRemote {
     @Override
     public void crearUbicacion(UbicacionDto ubi) throws ServiciosException {
         try {
-            em.persist(ubicacionMapper.toEntity(ubi));
+            em.persist(ubicacionMapper.toEntity(ubi, new CycleAvoidingMappingContext()));
             em.flush();
         } catch (Exception e) {
             throw new ServiciosException("No se pudo crear la ubicacion");
@@ -38,7 +39,7 @@ public class UbicacionBean implements UbicacionRemote {
     @Override
     public void modificarUbicacion(UbicacionDto ubi) throws ServiciosException {
         try {
-            em.merge(ubicacionMapper.toEntity(ubi));
+            em.merge(ubicacionMapper.toEntity(ubi, new CycleAvoidingMappingContext()));
             em.flush();
         } catch (Exception e) {
             throw new ServiciosException("No se pudo modificar la ubicacion");
@@ -82,7 +83,7 @@ public class UbicacionBean implements UbicacionRemote {
 
     @Override
     public void bajaLogicaUbicacion(UbicacionDto ub) throws ServiciosException {
-        Ubicacion ubicacion = ubicacionMapper.toEntity(ub);
+        Ubicacion ubicacion = ubicacionMapper.toEntity(ub, new CycleAvoidingMappingContext());
         try {
             ubicacion.setEstado(Estados.INACTIVO);
             em.merge(ubicacion);

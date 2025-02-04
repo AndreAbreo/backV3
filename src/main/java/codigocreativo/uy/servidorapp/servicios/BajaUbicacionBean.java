@@ -72,7 +72,7 @@ public class BajaUbicacionBean implements BajaUbicacionRemote {
 
     @Override
     public void bajaLogicaUbicacion(UbicacionDto ub) throws ServiciosException {
-        Ubicacion ubicacion = ubicacionMapper.toEntity(ub);
+        Ubicacion ubicacion = ubicacionMapper.toEntity(ub, new CycleAvoidingMappingContext());
         try {
             ubicacion.setEstado(Estados.INACTIVO);
             em.merge(ubicacion);
