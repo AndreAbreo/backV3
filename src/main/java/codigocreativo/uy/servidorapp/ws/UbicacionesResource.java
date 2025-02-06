@@ -69,6 +69,18 @@ public class UbicacionesResource {
     }
 
     @GET
+    @Path("/listarUbicaciones")
+    public Response listarUbicaciones() {
+        try{
+            List<UbicacionDto> ubicaciones = this.ur.listarUbicaciones();
+            return Response.ok(ubicaciones).build();
+        }catch (ServiciosException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al listar las ubicaciones: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
     @Path("/buscar")
     public Response buscarUbicacion(@QueryParam("id") Long id) {
         try {
