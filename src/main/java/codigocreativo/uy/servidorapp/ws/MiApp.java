@@ -20,6 +20,7 @@ public class MiApp extends Application {
         resources.add(EquipoResource.class);
         resources.add(UsuarioResource.class);
         resources.add(UbicacionesResource.class);
+        resources.add(EquipoVinculacionesResources.class);
         return resources;
     }
 }
