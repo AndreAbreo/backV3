@@ -1,5 +1,6 @@
 package codigocreativo.uy.servidorapp.ws;
 
+import codigocreativo.uy.servidorapp.DTO.ModelosEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.UbicacionDto;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.servicios.InstitucionRemote;
@@ -54,15 +55,16 @@ public class UbicacionesResource {
         }
     }
 
+
     @GET
-    @Path("/listar")
-    public Response listarUbicacion() {
+    @Path("/listarXInstitucion")
+    public Response listarUbicacionXInstitucion(@QueryParam("idInstitucion") Long idInstitucion) {
         try {
-            List<UbicacionDto> ubicaciones = this.ur.listarUbicaciones();
-            return Response.ok(ubicaciones).build();
-        } catch (ServiciosException e) {
+            List<UbicacionDto> ubicacion = this.ur.obtenerUbicacionesXInstitucion(idInstitucion);
+            return Response.ok(ubicacion).build();
+        } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al obtener ubicaciones: " + e.getMessage()).build();
+                    .entity("Error al buscar la ubicación para dicha institución: " + e.getMessage()).build();
         }
     }
 

@@ -1,6 +1,7 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
+import codigocreativo.uy.servidorapp.DTO.ModelosEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.UbicacionDto;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Remote;
@@ -23,4 +24,6 @@ public interface UbicacionRemote {
     public UbicacionDto obtenerUbicacionPorId(Long id) throws ServiciosException;
 
     void bajaLogicaUbicacion(UbicacionDto ub) throws ServiciosException;
+
+    public List<UbicacionDto> obtenerUbicacionesXInstitucion(Long idInstitucion);
 }

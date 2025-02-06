@@ -25,13 +25,11 @@ public class EquipoVinculacionesResources {
     private MarcasModeloRemote marcaRemote;
 
     @EJB
-    private ModelosEquipoRemote modelosRemote;
-
-    @EJB
     private PaisRemote paisRemote;
 
     @EJB
-    private UbicacionRemote ubicacionRemote;
+    private  InstitucionRemote institucionRemote;
+
 
     @GET
     @Path("/listaProveedores")
@@ -61,5 +59,11 @@ public class EquipoVinculacionesResources {
     @Path("listaModeloXMarca")
     public List<ModelosEquipoDto> listaModeloXMarca(@QueryParam("idMarca") Long idMarca) {
         return this.marcaRemote.obtenerModeloXMarca(idMarca);
+    }
+
+    @GET
+    @Path("listaInstituciones")
+    public List<InstitucionDto> listaInstituciones() {
+        return this.institucionRemote.obtenerInstituciones();
     }
 }

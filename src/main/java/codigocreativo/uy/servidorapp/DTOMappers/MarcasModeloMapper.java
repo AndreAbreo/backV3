@@ -20,11 +20,9 @@ public interface MarcasModeloMapper {
 
     List<MarcasModelo> toEntity(List<MarcasModeloDto> marcasModeloDto);
 
-    // ✅ Métodos corregidos para conversión de listas sin colisión
     List<MarcasModeloDto> toDtoMarcas(List<MarcasModelo> marcasModelo);
     List<ModelosEquipoDto> toDtoModelos(List<ModelosEquipo> modelosEquipo);
 
-    // ✅ Métodos individuales para conversión de objetos
     ModelosEquipoDto toDto(ModelosEquipo modelo);
 
     List<MarcasModeloDto> toDto(List<MarcasModelo> selectMarcasModeloFromMarcasModeloMarcasModelo);

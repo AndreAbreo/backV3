@@ -1,8 +1,10 @@
 package codigocreativo.uy.servidorapp.ws;
 
+import codigocreativo.uy.servidorapp.DTO.PerfilDto;
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.JWT.JwtService;
+import codigocreativo.uy.servidorapp.servicios.PerfilRemote;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
 
 import jakarta.ejb.EJB;
@@ -19,6 +21,9 @@ public class UsuarioResource {
     private UsuarioRemote er;
     @EJB
     private JwtService jwtService;
+
+    @EJB
+    private PerfilRemote perfilRemote;
 
     @POST
     @Path("/crear")
@@ -67,6 +72,12 @@ public class UsuarioResource {
     @Path("/ListarTodosLosUsuarios")
     public List<UsuarioDto> obtenerTodosLosUsuarios() {
         return this.er.obtenerUsuarios();
+    }
+
+    @GET
+    @Path("/ListarPerfiles")
+    public List<PerfilDto> obtenerPerfiles() {
+        return this.perfilRemote.obtenerPerfiles();
     }
 
     @GET

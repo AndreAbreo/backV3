@@ -1,10 +1,12 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
+import codigocreativo.uy.servidorapp.DTO.ModelosEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.UbicacionDto;
 import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.DTOMappers.EquipoMapper;
 import codigocreativo.uy.servidorapp.DTOMappers.UbicacionMapper;
+import codigocreativo.uy.servidorapp.entidades.ModelosEquipo;
 import codigocreativo.uy.servidorapp.entidades.Ubicacion;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
@@ -14,6 +16,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 public class UbicacionBean implements UbicacionRemote {
@@ -92,5 +95,18 @@ public class UbicacionBean implements UbicacionRemote {
             e.printStackTrace();
             throw new ServiciosException(e.getMessage());
         }
+    }
+
+    @Override
+    public List<UbicacionDto> obtenerUbicacionesXInstitucion(Long idInstitucion) {
+            List<Ubicacion> ubicacion = em.createQuery(
+                            "SELECT u FROM Ubicacion u WHERE u.idInstitucion.id = :idInstitucion", Ubicacion.class)
+                    .setParameter("idInstitucion", idInstitucion)
+                    .getResultList();
+
+
+            return ubicacion.stream()
+                    .map(ubicacionMapper::toDto)
+                    .collect(Collectors.toList());
     }
 }
