@@ -21,21 +21,4 @@ public class JwtService {
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
-
-    public String validateToken(String token) {
-        try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
-            return String.valueOf(true);
-        } catch (JwtException | IllegalArgumentException e) {
-            return String.valueOf(false);
-        }
-    }
-
-    public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.getSubject();
-    }
 }
