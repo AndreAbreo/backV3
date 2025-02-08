@@ -41,7 +41,32 @@ public class UsuarioResource {
     @Path("/modificar")
     public Response modificarUsuario(UsuarioDto usuario) {
         try {
-            this.er.modificarUsuario(usuario);
+            // Buscar usuario existente en la base de datos
+            UsuarioDto usuarioExistente = er.obtenerUsuario(usuario.getId());
+
+            if (usuarioExistente == null) {
+                return Response.status(Response.Status.NOT_FOUND).entity("Usuario no encontrado").build();
+            }
+
+            // Actualizar los datos permitidos
+            usuarioExistente.setApellido(usuario.getApellido());
+            usuarioExistente.setCedula(usuario.getCedula());
+            usuarioExistente.setEmail(usuario.getEmail());
+            usuarioExistente.setEstado(usuario.getEstado());
+            usuarioExistente.setFechaNacimiento(usuario.getFechaNacimiento());
+            usuarioExistente.setIdInstitucion(usuario.getIdInstitucion());
+            usuarioExistente.setIdPerfil(usuario.getIdPerfil());
+            usuarioExistente.setNombre(usuario.getNombre());
+            usuarioExistente.setNombreUsuario(usuario.getNombreUsuario());
+
+            // ✅ Si la contraseña no se envía en la solicitud, mantener la existente
+            if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
+                usuarioExistente.setContrasenia(usuario.getContrasenia());
+            }
+
+            // Guardar los cambios
+            er.modificarUsuario(usuarioExistente);
+
             return Response.status(200).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
