@@ -12,6 +12,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.Context;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -24,6 +26,9 @@ public class UsuarioResource {
 
     @EJB
     private PerfilRemote perfilRemote;
+
+    @Context
+    private HttpServletRequest request;
 
     @POST
     @Path("/crear")
@@ -101,7 +106,9 @@ public class UsuarioResource {
         UsuarioDto user = this.er.login(loginRequest.getUsuario(), loginRequest.getPassword());
 
         if (user != null) {
-            String token = jwtService.generateToken(user.getEmail());
+
+            String token = jwtService.generateToken(user.getEmail(), user.getId());
+
             user = user.setContrasenia(null);
             LoginResponse loginResponse = new LoginResponse(token, user);
             System.out.println("Ingreso correcto");
@@ -132,7 +139,7 @@ public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
         return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
     }
     user = user.setContrasenia(null);
-    String token = jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(user.getEmail(), user.getId());
     GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
     return Response.ok(loginResponse).build();
 }

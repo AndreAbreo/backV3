@@ -17,6 +17,7 @@ public class MiApp extends Application {
         resources.add(CORSFilter.class);
         resources.add(JacksonConfig.class);
         resources.add(JwtTokenFilter.class); // Asegúrate de que el filtro esté registrado
+        resources.add(StatusServer.class);
         resources.add(EquipoResource.class);
         resources.add(UsuarioResource.class);
         resources.add(UbicacionesResource.class);

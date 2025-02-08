@@ -1,6 +1,8 @@
 package codigocreativo.uy.servidorapp.JWT;
 
 import java.io.IOException;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -11,11 +13,13 @@ import jakarta.ws.rs.ext.Provider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
+
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class JwtTokenFilter implements ContainerRequestFilter {
 
-    private static final String SECRET_KEY = "b0bc1f9b2228b2094f3ba7bdb1b6a58059af6cdaf143127181bd0a17e6d312e2";
+    private static final Dotenv dotenv = Dotenv.load();
+    private final String secret = dotenv.get("JWT_SECRET");
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -23,16 +27,16 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
         String path = requestContext.getUriInfo().getPath();
-        System.out.println("obtener path "+path);
+        System.out.println("Obteniendo path: " + path);
 
         // Permitir acceso sin token JWT a endpoints específicos
-        if (path.startsWith("/usuarios/login") || path.startsWith("/usuarios/google-login") || path.startsWith("/usuarios/crear")) {
-            return;  // Permitir acceso sin token JWT
+        if (path.startsWith("/usuarios/login") || path.startsWith("/usuarios/google-login") ||
+                path.startsWith("/usuarios/crear") || path.startsWith("/api/status")) {
+            return;  // ✅ Permitir acceso sin token JWT
         }
 
-
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            System.out.println("No se encontró encabezado de autorización o no comienza con 'Bearer'");
+            System.out.println("❌ No se encontró encabezado de autorización o no comienza con 'Bearer'");
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
@@ -41,11 +45,11 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
         try {
             if (!isTokenValid(token)) {
-                System.out.println("Token inválido");
+                System.out.println("❌ Token inválido.");
                 requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             }
         } catch (Exception e) {
-            System.out.println("Error al validar el token: " + e.getMessage());
+            System.out.println("❌ Error al validar el token: " + e.getMessage());
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
@@ -53,12 +57,25 @@ public class JwtTokenFilter implements ContainerRequestFilter {
     private boolean isTokenValid(String token) {
         try {
             Claims claims = Jwts.parser()
-                .setSigningKey(SECRET_KEY)
-                .parseClaimsJws(token)
-                .getBody();
-            return true; // Si el token es válido, retorna true
+                    .setSigningKey(secret)
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            // 🔹 Verificar si el JWT almacena el ID del usuario
+            System.out.println("ID del usuario en el JWT: " + claims.get("id_usuario"));
+            System.out.println("Contenido del JWT: " + claims);
+
+            // Validar si el id_usuario existe en el token
+            Long userId = claims.get("id_usuario", Long.class);
+            if (userId == null) {
+                System.out.println("❌ id_usuario no presente en el token.");
+                return false;
+            }
+
+            return true; // ✅ Token válido
         } catch (Exception e) {
-            return false; // Si el token no es válido, retorna false
+            System.out.println("❌ Excepción en validación de token: " + e.getMessage());
+            return false;
         }
     }
 }
