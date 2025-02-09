@@ -1,15 +1,18 @@
 package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
+import codigocreativo.uy.servidorapp.DTO.UsuariosTelefonoDto;
 import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.DTOMappers.UsuarioMapper;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
+import codigocreativo.uy.servidorapp.entidades.UsuariosTelefono;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 
 import javax.swing.*;
 import java.sql.ResultSet;
@@ -105,4 +108,30 @@ public class UsuarioBean implements UsuarioRemote {
         return null;
     }
 }
+
+    @Transactional // 🔥 Garantiza que la transacción JPA funcione correctamente
+    @Override
+    public boolean eliminarTelefono(Long id) {
+        UsuariosTelefono telefono = em.find(UsuariosTelefono.class, id);
+
+        if (telefono != null) {
+            System.out.println("📡 Eliminando teléfono con ID: " + id);
+
+            em.remove(telefono); // 🔥 Intento de eliminación en BD
+            em.flush();
+
+            // 🔥 Verificar si sigue existiendo después de intentar eliminar
+            UsuariosTelefono checkTelefono = em.find(UsuariosTelefono.class, id);
+            if (checkTelefono == null) {
+                System.out.println("✅ Teléfono eliminado correctamente en la BD: " + id);
+                return true;
+            } else {
+                System.out.println("❌ El teléfono aún existe en la BD después del DELETE: " + id);
+                return false;
+            }
+        }
+
+        System.out.println("⚠️ No se encontró el teléfono en la BD: ID " + id);
+        return false;
+    }
 }

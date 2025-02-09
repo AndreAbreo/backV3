@@ -20,4 +20,5 @@ public interface UsuarioRemote {
     public UsuarioDto login(String usuario, String password);
     public List<UsuarioDto> obtenerUsuariosPorEstado(Estados estado);
     public UsuarioDto findUserByEmail(String email);
+    public boolean eliminarTelefono(Long id);
 }
