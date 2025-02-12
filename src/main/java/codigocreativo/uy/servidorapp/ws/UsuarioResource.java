@@ -188,6 +188,7 @@ public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
         String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
     GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
     return Response.ok(loginResponse).build();
+
 }
 
 
