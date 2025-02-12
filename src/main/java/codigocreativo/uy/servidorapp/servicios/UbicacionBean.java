@@ -75,7 +75,7 @@ public class UbicacionBean implements UbicacionRemote {
     @Override
     public List<UbicacionDto> listarUbicaciones() throws ServiciosException {
         //mostrar la ubicacion solo si tiene estado activo
-        List<Ubicacion> ubicaciones = em.createQuery("SELECT u FROM Ubicacion u WHERE u.estado = 'ACTIVO'", Ubicacion.class).getResultList();
+        List<Ubicacion> ubicaciones = em.createQuery("SELECT u FROM Ubicacion u", Ubicacion.class).getResultList();
         return ubicacionMapper.toDto(ubicaciones);
     }
 

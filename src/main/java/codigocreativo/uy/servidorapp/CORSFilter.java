@@ -13,7 +13,7 @@ public class CORSFilter implements ContainerResponseFilter {
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
         String origin = requestContext.getHeaderString("Origin");
 
-        if (origin != null && (origin.equals("http://localhost:3001"))) {
+        if (origin != null && (origin.equals("http://localhost:3000"))) {
             responseContext.getHeaders().add("Access-Control-Allow-Origin", origin);
 
         }

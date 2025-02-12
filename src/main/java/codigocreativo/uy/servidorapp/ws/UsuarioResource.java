@@ -153,7 +153,7 @@ public class UsuarioResource {
 
         if (user != null) {
 
-            String token = jwtService.generateToken(user.getEmail(), user.getId());
+            String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
 
             user = user.setContrasenia(null);
             LoginResponse loginResponse = new LoginResponse(token, user);
@@ -185,7 +185,7 @@ public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
         return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
     }
     user = user.setContrasenia(null);
-        String token = jwtService.generateToken(user.getEmail(), user.getId());
+        String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
     GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
     return Response.ok(loginResponse).build();
 }

@@ -17,9 +17,10 @@ public class JwtService {
     private static final Dotenv dotenv = Dotenv.load();
     private final String secret = dotenv.get("JWT_SECRET");
 
-    public String generateToken(String email, Long userId) {
+    public String generateToken(String email, Long userId, String perfil) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id_usuario", userId); // Mantener solo el ID del usuario
+        claims.put("id_perfil", perfil);
 
         return Jwts.builder()
                 .setClaims(claims) // Agregar datos adicionales al token
