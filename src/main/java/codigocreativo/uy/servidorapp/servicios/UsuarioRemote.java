@@ -21,4 +21,6 @@ public interface UsuarioRemote {
     public List<UsuarioDto> obtenerUsuariosPorEstado(Estados estado);
     public UsuarioDto findUserByEmail(String email);
     public boolean eliminarTelefono(Long id);
+    boolean existeCI(String cedula);
+    boolean existeMail(String email);
 }

@@ -32,11 +32,11 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         // Permitir acceso sin token JWT a endpoints específicos
         if (path.startsWith("/usuarios/login") || path.startsWith("/usuarios/google-login") ||
                 path.startsWith("/usuarios/crear") || path.startsWith("/api/status")) {
-            return;  // ✅ Permitir acceso sin token JWT
+            return;  // Permitir acceso sin token JWT
         }
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            System.out.println("❌ No se encontró encabezado de autorización o no comienza con 'Bearer'");
+            System.out.println("No se encontró encabezado de autorización o no comienza con 'Bearer'");
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
@@ -45,11 +45,11 @@ public class JwtTokenFilter implements ContainerRequestFilter {
 
         try {
             if (!isTokenValid(token)) {
-                System.out.println("❌ Token inválido.");
+                System.out.println("Token inválido.");
                 requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             }
         } catch (Exception e) {
-            System.out.println("❌ Error al validar el token: " + e.getMessage());
+            System.out.println("Error al validar el token: " + e.getMessage());
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
@@ -61,20 +61,17 @@ public class JwtTokenFilter implements ContainerRequestFilter {
                     .parseClaimsJws(token)
                     .getBody();
 
-            // 🔹 Verificar si el JWT almacena el ID del usuario
-            System.out.println("ID del usuario en el JWT: " + claims.get("id_usuario"));
-            System.out.println("Contenido del JWT: " + claims);
 
             // Validar si el id_usuario existe en el token
             Long userId = claims.get("id_usuario", Long.class);
             if (userId == null) {
-                System.out.println("❌ id_usuario no presente en el token.");
+                System.out.println("id_usuario no presente en el token.");
                 return false;
             }
 
-            return true; // ✅ Token válido
+            return true;
         } catch (Exception e) {
-            System.out.println("❌ Excepción en validación de token: " + e.getMessage());
+            System.out.println("Excepción en validación de token: " + e.getMessage());
             return false;
         }
     }

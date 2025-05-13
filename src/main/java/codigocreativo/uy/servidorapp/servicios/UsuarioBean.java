@@ -38,6 +38,32 @@ public class UsuarioBean implements UsuarioRemote {
     }
 
     @Override
+    public boolean existeMail(String email) {
+        try {
+            Long count = em.createQuery(
+                            "SELECT COUNT(u) FROM Usuario u WHERE u.email = :email", Long.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+            return count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean existeCI(String cedula) {
+        try {
+            Long count = em.createQuery(
+                            "SELECT COUNT(u) FROM Usuario u WHERE u.cedula = :cedula", Long.class)
+                    .setParameter("cedula", cedula)
+                    .getSingleResult();
+            return count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
     public void eliminarUsuario(UsuarioDto u) {
         em.createQuery("UPDATE Usuario u SET u.estado = 'INACTIVO' WHERE u.id = :id")
                 .setParameter("id", u.getId())

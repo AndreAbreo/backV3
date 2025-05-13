@@ -2,10 +2,13 @@ package codigocreativo.uy.servidorapp.servicios;
 
 import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
+import codigocreativo.uy.servidorapp.DTO.UbicacionDto;
 import codigocreativo.uy.servidorapp.DTOMappers.BajaEquipoMapper;
 import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.DTOMappers.EquipoMapper;
 import codigocreativo.uy.servidorapp.entidades.Equipo;
+import codigocreativo.uy.servidorapp.entidades.Ubicacion;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -34,6 +37,32 @@ public class EquipoBean implements EquipoRemote {
     public void modificarEquipo(EquipoDto equipo) {
         em.merge(equipoMapper.toEntity(equipo, new CycleAvoidingMappingContext()));
         em.flush();
+    }
+
+    @Override
+    public boolean existeIdInterno(String idInterno) {
+        try {
+            Long count = em.createQuery(
+                            "SELECT COUNT(e) FROM Equipo e WHERE e.idInterno = :idInterno", Long.class)
+                    .setParameter("idInterno", idInterno)
+                    .getSingleResult();
+            return count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean existeNroSerie(String nroSerie) {
+        try {
+            Long count = em.createQuery(
+                            "SELECT COUNT(e) FROM Equipo e WHERE e.nroSerie = :nroSerie", Long.class)
+                    .setParameter("nroSerie", nroSerie)
+                    .getSingleResult();
+            return count != null && count > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     //se cambia em.persist() por em.merge()

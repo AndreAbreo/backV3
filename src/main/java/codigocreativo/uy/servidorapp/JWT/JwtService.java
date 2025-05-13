@@ -19,14 +19,15 @@ public class JwtService {
 
     public String generateToken(String email, Long userId, String perfil) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("id_usuario", userId); // Mantener solo el ID del usuario
+        claims.put("id_usuario", userId);
         claims.put("id_perfil", perfil);
 
         return Jwts.builder()
-                .setClaims(claims) // Agregar datos adicionales al token
+                .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000)) // 30 días
+                //.setExpiration(new Date(System.currentTimeMillis() + 8L * 60 * 60 * 1000)) // 8 horas
+                .setExpiration(new Date(System.currentTimeMillis() + 10 * 1000)) // 10 segundos
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }

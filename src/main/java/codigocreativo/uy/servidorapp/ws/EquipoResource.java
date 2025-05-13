@@ -35,6 +35,18 @@ public class EquipoResource {
         return Response.status(200).build();
     }
 
+    @GET
+    @Path("/existeIdInterno")
+    public boolean existeIdInterno(@QueryParam("idInterno") String idInterno){
+        return this.er.existeIdInterno(idInterno);
+    }
+
+    @GET
+    @Path("/existeNroSerie")
+    public boolean existeNroSerie(@QueryParam("nroSerie") String nroSerie){
+        return this.er.existeNroSerie(nroSerie);
+    }
+
     @PUT
     @Path("/Inactivar")
     public Response eliminarEquipo(BajaEquipoDto equipo){

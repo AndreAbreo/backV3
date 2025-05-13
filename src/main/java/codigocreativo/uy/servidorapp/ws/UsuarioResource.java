@@ -108,6 +108,18 @@ public class UsuarioResource {
     }
 
     @GET
+    @Path("/existeMail")
+    public boolean existeMail(@QueryParam("email") String email){
+        return this.er.existeMail(email);
+    }
+
+    @GET
+    @Path("/existeCI")
+    public boolean existeCI(@QueryParam("cedula") String cedula){
+        return this.er.existeCI(cedula);
+    }
+
+    @GET
     @Path("/BuscarUsuarioPorId")
     public UsuarioDto buscarEquipo(@QueryParam("id") Long id){
         return this.er.obtenerUsuario(id);
@@ -184,11 +196,11 @@ public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
     } else if (!user.getEstado().equals(Estados.ACTIVO)) {
         return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
     }
+
     user = user.setContrasenia(null);
-        String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
+    String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
     GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
     return Response.ok(loginResponse).build();
-
 }
 
 
