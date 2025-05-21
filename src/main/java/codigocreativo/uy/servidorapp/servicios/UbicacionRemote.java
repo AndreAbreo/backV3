@@ -19,9 +19,9 @@ public interface UbicacionRemote {
 
     void moverEquipoDeUbicacion(EquipoDto equipo, UbicacionDto ubicacion) throws ServiciosException;
 
-    public List<UbicacionDto> listarUbicaciones() throws ServiciosException;
+    List<UbicacionDto> listarUbicaciones() throws ServiciosException;
 
-    public UbicacionDto obtenerUbicacionPorId(Long id) throws ServiciosException;
+    UbicacionDto obtenerUbicacionPorId(Long id) throws ServiciosException;
 
     void bajaLogicaUbicacion(UbicacionDto ub) throws ServiciosException;
 

@@ -2,11 +2,13 @@ package codigocreativo.uy.servidorapp.ws;
 
 
 import codigocreativo.uy.servidorapp.DTO.*;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.servicios.*;
 import com.sun.jdi.PrimitiveValue;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -35,12 +37,6 @@ public class EquipoVinculacionesResources {
     @Path("/listaProveedores")
     public List<ProveedoresEquipoDto> listaProveedores() {
         return this.proveedoresRemote.obtenerProveedoresEquipo();
-    }
-
-    @GET
-    @Path("/listaPaises")
-    public List<PaisDto> listaPaises() {
-        return this.paisRemote.obtenerpais();
     }
 
     @GET
