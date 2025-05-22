@@ -15,4 +15,5 @@ public interface PaisRemote {
     List<PaisDto> obtenerpais()  throws ServiciosException;
     PaisDto obtenerPaisPorId(Long id)  throws ServiciosException;
     void bajaLogicaPais(PaisDto pais)  throws ServiciosException;
+    boolean existePais(String nombre) throws ServiciosException;
 }

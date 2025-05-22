@@ -70,4 +70,17 @@ public class PaisBean implements PaisRemote{
             throw new ServiciosException("Error al inactivar el país: "+e.getMessage());
         }
     }
+
+    @Override
+    public boolean existePais(String nombre) {
+        try {
+            Long count = em.createQuery(
+                            " SELECT COUNT(p) FROM Pais p WHERE p.nombre = :nombre", Long.class)
+                    .setParameter("nombre", nombre)
+                    .getSingleResult();
+            return count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

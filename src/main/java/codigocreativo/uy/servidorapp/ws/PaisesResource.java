@@ -20,12 +20,11 @@ public class PaisesResource {
     @POST
     @Path("/crear")
     public Response crearPais(PaisDto pais) {
+
         try {
-            System.out.println("Recibido: nombre=" + pais.getNombre() + ", estado=" + pais.getEstado());
             this.pr.crearPais(pais);
             return Response.status(201).build();
         }catch(ServiciosException e) {
-            e.printStackTrace();
             return Response.status(500)
             .entity("{\"message\":\"" + e.getMessage() + "\"}")
                     .type(MediaType.APPLICATION_JSON)
@@ -76,6 +75,16 @@ public class PaisesResource {
         } catch (ServiciosException e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error al buscar el país: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/existePais")
+    public boolean existePais(@QueryParam("nombre") String nombre){
+        try {
+            return this.pr.existePais(nombre);
+        }catch (ServiciosException e){
+            return false;
         }
     }
 
