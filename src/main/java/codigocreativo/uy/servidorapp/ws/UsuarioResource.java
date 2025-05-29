@@ -12,6 +12,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Context;
 
@@ -181,26 +183,29 @@ public class UsuarioResource {
     @POST
 @Path("/google-login")
 public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-    if (googleLoginRequest == null) {
+        System.out.println("Solicitud recibida para google-login con email: " + googleLoginRequest.getEmail());
+    if (googleLoginRequest == null || googleLoginRequest.getEmail() == null) {
         return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
     }
 
     UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
-    boolean userNeedsAdditionalInfo = false;
+        if (user == null) {
+            // Usuario no registrado → informar que necesita registrarse
+            return Response.ok(Map.of(
+                    "userNeedsAdditionalInfo", true
+            )).build();
+        }
+        if (!user.getEstado().equals(Estados.ACTIVO)) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of("error", "Cuenta inactiva, por favor contacte al administrador"))
+                    .build();
+        }
 
-    if (user == null) {
-        user = new UsuarioDto();
-        user.setEmail(googleLoginRequest.getEmail());
-        user.setNombre(googleLoginRequest.getName());
-        userNeedsAdditionalInfo = true;
-    } else if (!user.getEstado().equals(Estados.ACTIVO)) {
-        return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"Cuenta inactiva, por favor contacte al administrador\"}").build();
-    }
+        String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
+        user = user.setContrasenia(null);
 
-    user = user.setContrasenia(null);
-    String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
-    GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, userNeedsAdditionalInfo, user);
-    return Response.ok(loginResponse).build();
+        GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, false, user);
+        return Response.ok(loginResponse).build();
 }
 
 
