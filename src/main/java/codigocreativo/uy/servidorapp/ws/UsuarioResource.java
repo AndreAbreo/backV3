@@ -75,27 +75,6 @@ public class UsuarioResource {
         }
     }
 
-    @DELETE
-    @Path("/eliminarTelefono/{id_telefono}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response eliminarTelefono(@PathParam("id_telefono") Long id) {
-        System.out.println("📡 Recibida solicitud DELETE para eliminar teléfono con ID: " + id);
-
-        try {
-            boolean eliminado = er.eliminarTelefono(id);
-            if (eliminado) {
-                System.out.println("✅ Teléfono eliminado en la BD: " + id);
-                return Response.status(Response.Status.NO_CONTENT).build(); // 🔥 204 No Content
-            } else {
-                System.out.println("⚠️ No se encontró el teléfono en la BD: " + id);
-                return Response.status(Response.Status.NOT_FOUND).entity("Teléfono no encontrado").build();
-            }
-        } catch (Exception e) {
-            System.out.println("❌ Error eliminando teléfono: " + e.getMessage());
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al eliminar teléfono: " + e.getMessage()).build();
-        }
-    }
-
     @PUT
     @Path("Inactivar")
     public Response inactivarUsuario(UsuarioDto usuario){

@@ -16,13 +16,14 @@ public class MiApp extends Application {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(CORSFilter.class);
         resources.add(JacksonConfig.class);
-        resources.add(JwtTokenFilter.class); // Asegúrate de que el filtro esté registrado
+        resources.add(JwtTokenFilter.class);
         resources.add(StatusServer.class);
         resources.add(EquipoResource.class);
         resources.add(UsuarioResource.class);
         resources.add(UbicacionesResource.class);
         resources.add(EquipoVinculacionesResources.class);
         resources.add(PaisesResource.class);
+        resources.add(TelefonosResource.class);
         return resources;
     }
 }
