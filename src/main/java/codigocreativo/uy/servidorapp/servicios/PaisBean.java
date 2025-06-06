@@ -75,7 +75,7 @@ public class PaisBean implements PaisRemote{
     public boolean existePais(String nombre) {
         try {
             Long count = em.createQuery(
-                            " SELECT COUNT(p) FROM Pais p WHERE p.nombre = :nombre", Long.class)
+                            " SELECT COUNT(p) FROM Pais p WHERE LOWER(p.nombre) = LOWER(:nombre)", Long.class)
                     .setParameter("nombre", nombre)
                     .getSingleResult();
             return count > 0;
