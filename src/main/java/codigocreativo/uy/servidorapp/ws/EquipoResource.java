@@ -57,7 +57,7 @@ public class EquipoResource {
 
     @PUT
     @Path("/Activar")
-    public Response activarEquipo(Long idEquipo){
+    public Response activarEquipo(@QueryParam("idEquipo") Long idEquipo){
         try {
             this.er.activarEquipo(idEquipo);
             return Response.ok().build(); // 200 OK

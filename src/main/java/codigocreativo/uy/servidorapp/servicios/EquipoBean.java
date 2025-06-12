@@ -78,12 +78,12 @@ public class EquipoBean implements EquipoRemote {
     @Override
     public void activarEquipo(Long idEquipo) throws ServiciosException {
         try {
-            em.createQuery("UPDATE Equipo equipo SET equipo.estado = 'ACTIVO' WHERE equipo.id = :idEquipo")
-                    .setParameter("idEquipo", idEquipo)
+            em.createQuery("UPDATE Equipo equipo SET equipo.estado = 'ACTIVO' WHERE equipo.id = :id")
+                    .setParameter("id", idEquipo)
                     .executeUpdate();
 
-            em.createQuery("DELETE FROM BajaEquipo b WHERE b.idEquipo.id = :idEquipo")
-                    .setParameter("idEquipo", idEquipo)
+            em.createQuery("DELETE FROM BajaEquipo b WHERE b.idEquipo.id = :id")
+                    .setParameter("id", idEquipo)
                     .executeUpdate();
             em.flush();
         }catch (Exception e) {
