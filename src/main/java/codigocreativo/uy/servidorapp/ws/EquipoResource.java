@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import codigocreativo.uy.servidorapp.servicios.BajaEquipoRemote;
 import codigocreativo.uy.servidorapp.servicios.EquipoRemote;
 import jakarta.ejb.EJB;
@@ -52,6 +53,19 @@ public class EquipoResource {
     public Response eliminarEquipo(BajaEquipoDto equipo){
         this.er.eliminarEquipo(equipo);
         return Response.status(200).build();
+    }
+
+    @PUT
+    @Path("/Activar")
+    public Response activarEquipo(Long idEquipo){
+        try {
+            this.er.activarEquipo(idEquipo);
+            return Response.ok().build(); // 200 OK
+        } catch (ServiciosException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("No se pudo activar el equipo: " + e.getMessage())
+                    .build();
+        }
     }
 
     @GET

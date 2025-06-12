@@ -4,6 +4,7 @@ import codigocreativo.uy.servidorapp.DTO.BajaEquipoDto;
 import codigocreativo.uy.servidorapp.DTO.EquipoDto;
 import codigocreativo.uy.servidorapp.entidades.BajaEquipo;
 import codigocreativo.uy.servidorapp.entidades.Equipo;
+import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 import jakarta.ejb.Remote;
 
 import java.util.List;
@@ -21,5 +22,6 @@ public interface EquipoRemote {
 
      boolean existeIdInterno(String id);
      boolean existeNroSerie(String nroSerie);
+     void activarEquipo(Long idEquipo)  throws ServiciosException;
 
 }

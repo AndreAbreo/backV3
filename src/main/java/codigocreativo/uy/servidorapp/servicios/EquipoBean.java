@@ -76,6 +76,22 @@ public class EquipoBean implements EquipoRemote {
     }
 
     @Override
+    public void activarEquipo(Long idEquipo) throws ServiciosException {
+        try {
+            em.createQuery("UPDATE Equipo equipo SET equipo.estado = 'ACTIVO' WHERE equipo.id = :idEquipo")
+                    .setParameter("idEquipo", idEquipo)
+                    .executeUpdate();
+
+            em.createQuery("DELETE FROM BajaEquipo b WHERE b.idEquipo.id = :idEquipo")
+                    .setParameter("idEquipo", idEquipo)
+                    .executeUpdate();
+            em.flush();
+        }catch (Exception e) {
+            throw new ServiciosException("No se pudo activar el equipo: "+e.getMessage());
+        }
+    }
+
+    @Override
     public List<EquipoDto> obtenerEquiposFiltrado(String filtro, String valor) {
         return equipoMapper.toDto(em.createQuery("SELECT e FROM Equipo e WHERE e." + filtro + " = :valor", Equipo.class)
                 .setParameter("valor", valor)
