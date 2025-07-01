@@ -42,7 +42,7 @@ public class TelefonosResource {
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("eliminarTelefono/{id}")
     public Response eliminarTelefono(@PathParam("id") Long id) {
         try {
             this.tr.eliminarTelefono(id);

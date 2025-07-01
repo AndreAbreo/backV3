@@ -54,7 +54,7 @@ public class Usuario implements Serializable {
     @JoinColumn(name = "ID_PERFIL")
     private Perfil idPerfil;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "idUsuario", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "idUsuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UsuariosTelefono> usuariosTelefonos = new LinkedHashSet<>();
 
     public Set<UsuariosTelefono> getUsuariosTelefonos() {

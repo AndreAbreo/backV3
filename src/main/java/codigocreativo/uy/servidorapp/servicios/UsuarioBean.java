@@ -33,7 +33,19 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public void modificarUsuario(UsuarioDto u) {
-        em.merge(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
+        Usuario usuarioEntity = usuarioMapper.toEntity(u, new CycleAvoidingMappingContext());
+
+        // Persistir teléfonos nuevos
+        if (usuarioEntity.getUsuariosTelefonos() != null) {
+            for (UsuariosTelefono tel : usuarioEntity.getUsuariosTelefonos()) {
+                if (tel.getId() == null || tel.getId() == 0) {
+                    tel.setIdUsuario(usuarioEntity); // Asegura relación bidireccional
+                    em.persist(tel);
+                }
+            }
+        }
+
+        em.merge(usuarioEntity); // Actualiza usuario y teléfonos existentes
         em.flush();
     }
 

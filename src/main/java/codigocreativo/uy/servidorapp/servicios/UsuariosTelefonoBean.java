@@ -51,6 +51,7 @@ public class UsuariosTelefonoBean implements UsuariosTelefonoRemote{
         try {
             UsuariosTelefono telefono = em.find(UsuariosTelefono.class, id);
             if (telefono != null) {
+                telefono.setIdUsuario(null);
                 em.remove(telefono);
                 em.flush();
             } else {
