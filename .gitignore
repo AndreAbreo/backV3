@@ -1,3 +1,6 @@
 /target/
 /deployments/*
 !/deployments/.gitkeep
+
+# local env files
+.env*.local
