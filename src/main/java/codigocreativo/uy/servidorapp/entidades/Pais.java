@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.entidades;
 
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import jakarta.persistence.*;
+import jakarta.persistence.Transient;
 
 import java.io.Serializable;
 
