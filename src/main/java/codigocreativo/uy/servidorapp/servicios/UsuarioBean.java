@@ -7,6 +7,7 @@ import codigocreativo.uy.servidorapp.DTOMappers.UsuarioMapper;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
 import codigocreativo.uy.servidorapp.entidades.UsuariosTelefono;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
+import codigocreativo.uy.servidorapp.servicios.LdapService;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -24,6 +25,9 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Inject
     UsuarioMapper usuarioMapper;
+
+    @Inject
+    LdapService ldapService;
 
     @Override
     public void crearUsuario(UsuarioDto u) {
@@ -125,11 +129,18 @@ public class UsuarioBean implements UsuarioRemote {
 
     @Override
     public UsuarioDto login(String usuario, String password) {
+        boolean authenticated = ldapService.authenticate(usuario, password);
+        if (!authenticated) {
+            return null;
+        }
+
         try {
-            return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.email = :usuario AND u.contrasenia = :password", Usuario.class)
+            Usuario user = em.createQuery(
+                            "SELECT u FROM Usuario u WHERE u.email = :usuario OR u.nombreUsuario = :usuario",
+                            Usuario.class)
                     .setParameter("usuario", usuario)
-                    .setParameter("password", password)
-                    .getSingleResult(), new CycleAvoidingMappingContext());
+                    .getSingleResult();
+            return usuarioMapper.toDto(user, new CycleAvoidingMappingContext());
         } catch (NoResultException e) {
             return null;
         }
