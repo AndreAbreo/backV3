@@ -14,7 +14,7 @@ public class LdapAuthTest {
 
     @Test
     public void testLdapAuth_OK() {
-        String ldapUrl = "ldap://192.168.1.40:389"; // o System.getenv("LDAP_URL");
+        String ldapUrl = "ldap://192.168.1.41:389"; // o System.getenv("LDAP_URL");
         String email = "EmpleadoComun@hospital.local";
         String password = "Admin1234!";
 

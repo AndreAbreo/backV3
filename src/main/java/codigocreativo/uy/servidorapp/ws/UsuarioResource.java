@@ -22,12 +22,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UsuarioResource {
     @EJB
     private UsuarioRemote er;
+
+    private static final Dotenv dotenv = Dotenv.load();
+    private static final String LDAP_URL = dotenv.get("LDAP_URL");
+    private static final String LDAP_DOMAIN = dotenv.get("LDAP_DOMAIN");
 
     @EJB
     private JwtService jwtService;
@@ -144,22 +150,28 @@ public class UsuarioResource {
     @POST
     @Path("/login")
     public Response login(LoginRequest loginRequest) {
-        System.out.println("LDAP_URL env: " + System.getenv("LDAP_URL"));
+        System.out.println("LDAP_URL env: " + LDAP_URL);
 
         String email = loginRequest.getUsuario();
         String password = loginRequest.getPassword();
 
         System.out.println("\uD83D\uDD10 Intentando login con: " + email);
 
-        if (email.endsWith("@hospital.local")) {
+        if (email != null && email.toLowerCase().endsWith("@hospital.local")) {
             System.out.println("➡️ Usuario con dominio hospital.local, intentando autenticación LDAP...");
 
             try {
                 Hashtable<String, String> env = new Hashtable<>();
                 env.put("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
-                env.put("java.naming.provider.url", System.getenv("LDAP_URL"));
+                env.put("java.naming.provider.url", LDAP_URL);
                 env.put("java.naming.security.authentication", "simple");
-                env.put("java.naming.security.principal", email);
+                if (email.contains("@")) {
+                    env.put("java.naming.security.principal", email);
+                } else if (LDAP_DOMAIN != null && !LDAP_DOMAIN.isEmpty()) {
+                    env.put("java.naming.security.principal", LDAP_DOMAIN + "\\" + email);
+                } else {
+                    env.put("java.naming.security.principal", email);
+                }
                 env.put("java.naming.security.credentials", password);
 
                 DirContext ctx = new InitialDirContext(env);
