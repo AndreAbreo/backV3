@@ -2,20 +2,28 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.DTO.PerfilDto;
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
+import codigocreativo.uy.servidorapp.DTO.LoginRequest;
+import codigocreativo.uy.servidorapp.DTO.LoginResponse;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.JWT.JwtService;
 import codigocreativo.uy.servidorapp.servicios.PerfilRemote;
 import codigocreativo.uy.servidorapp.servicios.UsuarioRemote;
+import codigocreativo.uy.servidorapp.DTOMappers.UsuarioMapper;
+import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.entidades.Usuario;
 
 import jakarta.ejb.EJB;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.Context;
+import javax.naming.NamingException;
+
+import java.util.List;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -23,11 +31,18 @@ import jakarta.ws.rs.core.Context;
 public class UsuarioResource {
     @EJB
     private UsuarioRemote er;
-    @EJB
+
+    @Inject
     private JwtService jwtService;
 
     @EJB
     private PerfilRemote perfilRemote;
+
+    @Inject
+    private UsuarioMapper usuarioMapper;
+
+    @PersistenceContext(unitName = "servidorappPU")
+    private EntityManager em;
 
     @Context
     private HttpServletRequest request;
@@ -49,7 +64,6 @@ public class UsuarioResource {
                 return Response.status(Response.Status.NOT_FOUND).entity("Usuario no encontrado").build();
             }
 
-            // Actualización de campos simples
             usuarioExistente.setApellido(usuario.getApellido());
             usuarioExistente.setCedula(usuario.getCedula());
             usuarioExistente.setEmail(usuario.getEmail());
@@ -60,15 +74,12 @@ public class UsuarioResource {
             usuarioExistente.setNombre(usuario.getNombre());
             usuarioExistente.setNombreUsuario(usuario.getNombreUsuario());
 
-            // ✅ Conservar o actualizar contraseña
             if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
                 usuarioExistente.setContrasenia(usuario.getContrasenia());
             }
 
-            // ✅ Agregar o actualizar teléfonos (reemplaza toda la lista)
             usuarioExistente.setUsuariosTelefonos(usuario.getUsuariosTelefonos());
 
-            // Guardar cambios
             er.modificarUsuario(usuarioExistente);
 
             return Response.status(200).build();
@@ -81,38 +92,38 @@ public class UsuarioResource {
 
     @PUT
     @Path("Inactivar")
-    public Response inactivarUsuario(UsuarioDto usuario){
+    public Response inactivarUsuario(UsuarioDto usuario) {
         this.er.eliminarUsuario(usuario);
         return Response.status(200).build();
     }
 
     @GET
     @Path("/BuscarUsuarioPorCI")
-    public UsuarioDto buscarEquipo(@QueryParam("ci") String ci){
+    public UsuarioDto buscarEquipo(@QueryParam("ci") String ci) {
         return this.er.obtenerUsuarioPorCI(ci);
     }
 
     @GET
     @Path("/existeMail")
-    public boolean existeMail(@QueryParam("email") String email){
+    public boolean existeMail(@QueryParam("email") String email) {
         return this.er.existeMail(email);
     }
 
     @GET
     @Path("/existeCI")
-    public boolean existeCI(@QueryParam("cedula") String cedula){
+    public boolean existeCI(@QueryParam("cedula") String cedula) {
         return this.er.existeCI(cedula);
     }
 
     @GET
     @Path("/BuscarUsuarioPorId")
-    public UsuarioDto buscarEquipo(@QueryParam("id") Long id){
+    public UsuarioDto buscarEquipo(@QueryParam("id") Long id) {
         return this.er.obtenerUsuario(id);
     }
 
     @GET
     @Path("/ObtenerUsuarioPorEstado")
-    public List<UsuarioDto> obtenerUsuarioPorEstado(@QueryParam("estado") Estados estado){
+    public List<UsuarioDto> obtenerUsuarioPorEstado(@QueryParam("estado") Estados estado) {
         return this.er.obtenerUsuariosPorEstado(estado);
     }
 
@@ -142,159 +153,56 @@ public class UsuarioResource {
     @POST
     @Path("/login")
     public Response login(LoginRequest loginRequest) {
-        if (loginRequest == null) {
-            System.out.println("Request null");
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
-        }
-        UsuarioDto user = this.er.login(loginRequest.getUsuario(), loginRequest.getPassword());
-
-        if (user != null) {
-
-            String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
-
-            user = user.setContrasenia(null);
-            LoginResponse loginResponse = new LoginResponse(token, user);
-            System.out.println("Ingreso correcto");
-            System.out.println(Response.ok(loginResponse).build());
-            return Response.ok(loginResponse).build();
-        } else {
-            System.out.println("login unautorized invalid credentials");
-            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
-        }
-    }
-
-    @POST
-@Path("/google-login")
-public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-        System.out.println("Solicitud recibida para google-login con email: " + googleLoginRequest.getEmail());
-    if (googleLoginRequest == null || googleLoginRequest.getEmail() == null) {
-        return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
-    }
-
-    UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
-        if (user == null) {
-            // Usuario no registrado → informar que necesita registrarse
-            return Response.ok(Map.of(
-                    "userNeedsAdditionalInfo", true
-            )).build();
-        }
-        if (!user.getEstado().equals(Estados.ACTIVO)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of("error", "Cuenta inactiva, por favor contacte al administrador"))
+        if (loginRequest == null || loginRequest.getUsuario() == null || loginRequest.getUsuario().isEmpty()
+                || loginRequest.getPassword() == null || loginRequest.getPassword().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Usuario y contraseña requeridos")
                     .build();
         }
+        try {
+            Usuario usuarioEntity = em.createQuery(
+                            "SELECT u FROM Usuario u WHERE u.nombreUsuario = :usuario", Usuario.class)
+                    .setParameter("usuario", loginRequest.getUsuario())
+                    .getResultStream()
+                    .findFirst()
+                    .orElseThrow(() -> new WebApplicationException("Usuario no encontrado", Response.Status.UNAUTHORIZED));
 
-        String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
-        user = user.setContrasenia(null);
+            if (!Estados.ACTIVO.equals(usuarioEntity.getEstado())) {
+                throw new WebApplicationException("Cuenta inactiva", Response.Status.UNAUTHORIZED);
+            }
 
-        GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, false, user);
-        return Response.ok(loginResponse).build();
-}
+            autenticarLDAP(loginRequest.getUsuario(), loginRequest.getPassword());
 
+            UsuarioDto userDto = usuarioMapper.toDto(usuarioEntity, new CycleAvoidingMappingContext());
+            String token = jwtService.generateToken(
+                    userDto.getEmail(), userDto.getId(), userDto.getIdPerfil().getNombrePerfil());
+            userDto.setContrasenia(null);
+            LoginResponse response = new LoginResponse(token, userDto);
+            return Response.ok(response).build();
 
-    public static class LoginRequest {
-        private String usuario;
-        private String password;
-
-        public String getUsuario() {
-            return usuario;
-        }
-
-        public void setUsuario(String usuario) {
-            this.usuario = usuario;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-    }
-
-    public static class LoginResponse {
-        private String token;
-        private UsuarioDto user;
-
-        public LoginResponse(String token, UsuarioDto user) {
-            this.token = token;
-            this.user = user;
-        }
-
-        public String getToken() {
-            return token;
-        }
-
-        public void setToken(String token) {
-            this.token = token;
-        }
-
-        public UsuarioDto getUser() {
-            return user;
-        }
-
-        public void setUser(UsuarioDto user) {
-            this.user = user;
+        } catch (NamingException e) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Credenciales inválidas o usuario no pertenece al dominio.")
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error inesperado")
+                    .build();
         }
     }
 
-    public static class GoogleLoginRequest {
-        private String email;
-        private String name;
+    private void autenticarLDAP(String usuario, String password) throws NamingException {
+        String ldapURL = System.getenv("LDAP_URL");
+        String domain = System.getenv("LDAP_DOMAIN");
 
-        public String getEmail() {
-            return email;
-        }
+        java.util.Hashtable<String, String> env = new java.util.Hashtable<>();
+        env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(javax.naming.Context.PROVIDER_URL, ldapURL);
+        env.put(javax.naming.Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(javax.naming.Context.SECURITY_PRINCIPAL, domain + "\\" + usuario);
+        env.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
 
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-    }
-
-    public static class GoogleLoginResponse {
-        private String token;
-        private boolean userNeedsAdditionalInfo;
-        private UsuarioDto user; // Añade este campo
-
-        // Constructor
-        public GoogleLoginResponse(String token, boolean userNeedsAdditionalInfo, UsuarioDto user) {
-            this.token = token;
-            this.userNeedsAdditionalInfo = userNeedsAdditionalInfo;
-            this.user = user;
-        }
-
-        // Getters y setters
-        public String getToken() {
-            return token;
-        }
-
-        public void setToken(String token) {
-            this.token = token;
-        }
-
-        public boolean isUserNeedsAdditionalInfo() {
-            return userNeedsAdditionalInfo;
-        }
-
-        public void setUserNeedsAdditionalInfo(boolean userNeedsAdditionalInfo) {
-            this.userNeedsAdditionalInfo = userNeedsAdditionalInfo;
-        }
-
-        public UsuarioDto getUser() {
-            return user;
-        }
-
-        public void setUser(UsuarioDto user) {
-            this.user = user;
-        }
+        new javax.naming.directory.InitialDirContext(env);
     }
 }

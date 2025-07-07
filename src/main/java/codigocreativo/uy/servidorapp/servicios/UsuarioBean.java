@@ -1,160 +1,90 @@
 package codigocreativo.uy.servidorapp.servicios;
 
+import codigocreativo.uy.servidorapp.DTO.LoginRequest;
+import codigocreativo.uy.servidorapp.DTO.LoginResponse;
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
-import codigocreativo.uy.servidorapp.DTO.UsuariosTelefonoDto;
-import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
+import codigocreativo.uy.servidorapp.JWT.JwtService;
 import codigocreativo.uy.servidorapp.DTOMappers.UsuarioMapper;
+import codigocreativo.uy.servidorapp.DTOMappers.CycleAvoidingMappingContext;
 import codigocreativo.uy.servidorapp.entidades.Usuario;
-import codigocreativo.uy.servidorapp.entidades.UsuariosTelefono;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
-import codigocreativo.uy.servidorapp.servicios.LdapService;
+
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 
-import javax.swing.*;
-import java.sql.ResultSet;
-import java.util.List;
+import java.util.Hashtable;
+
 @Stateless
-public class UsuarioBean implements UsuarioRemote {
-    @PersistenceContext (unitName = "default")
+public class UsuarioBean {
+
+    @PersistenceContext(unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject
-    UsuarioMapper usuarioMapper;
+    private JwtService jwtService;
 
     @Inject
-    LdapService ldapService;
+    private UsuarioMapper usuarioMapper;
 
-    @Override
-    public void crearUsuario(UsuarioDto u) {
-        u.setEstado(Estados.SIN_VALIDAR);
-        em.merge(usuarioMapper.toEntity(u, new CycleAvoidingMappingContext()));
-    }
+    public LoginResponse login(LoginRequest req) {
+        if (req == null || req.getUsuario() == null || req.getUsuario().isEmpty()
+                || req.getPassword() == null || req.getPassword().isEmpty()) {
+            throw new WebApplicationException("Usuario y contraseña requeridos", Response.Status.BAD_REQUEST);
+        }
 
-    @Override
-    public void modificarUsuario(UsuarioDto u) {
-        Usuario usuarioEntity = usuarioMapper.toEntity(u, new CycleAvoidingMappingContext());
-
-        // Persistir teléfonos nuevos
-        if (usuarioEntity.getUsuariosTelefonos() != null) {
-            for (UsuariosTelefono tel : usuarioEntity.getUsuariosTelefonos()) {
-                if (tel.getId() == null || tel.getId() == 0) {
-                    tel.setIdUsuario(usuarioEntity); // Asegura relación bidireccional
-                    em.persist(tel);
-                }
+        if (req.getUsuario().contains("@") || req.getUsuario().contains("\\")) {
+            try {
+                autenticarLDAP(req.getUsuario(), req.getPassword());
+            } catch (NamingException e) {
+                throw new WebApplicationException("Credenciales inválidas o usuario no pertenece al dominio", Response.Status.UNAUTHORIZED);
             }
         }
 
-        em.merge(usuarioEntity); // Actualiza usuario y teléfonos existentes
-        em.flush();
-    }
+        Usuario user = em.createQuery("SELECT u FROM Usuario u WHERE u.nombreUsuario = :usuario", Usuario.class)
+                .setParameter("usuario", req.getUsuario())
+                .getResultStream()
+                .findFirst()
+                .orElseThrow(() -> new WebApplicationException("Usuario no encontrado", Response.Status.UNAUTHORIZED));
 
-    @Override
-    public boolean existeMail(String email) {
-        try {
-            Long count = em.createQuery(
-                            "SELECT COUNT(u) FROM Usuario u WHERE u.email = :email", Long.class)
-                    .setParameter("email", email)
-                    .getSingleResult();
-            return count > 0;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean existeCI(String cedula) {
-        try {
-            Long count = em.createQuery(
-                            "SELECT COUNT(u) FROM Usuario u WHERE u.cedula = :cedula", Long.class)
-                    .setParameter("cedula", cedula)
-                    .getSingleResult();
-            return count > 0;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public void eliminarUsuario(UsuarioDto u) {
-        em.createQuery("UPDATE Usuario u SET u.estado = 'INACTIVO' WHERE u.id = :id")
-                .setParameter("id", u.getId())
-                .executeUpdate();
-        em.flush();
-    }
-
-    @Override
-    public UsuarioDto obtenerUsuario(Long id) {
-        return usuarioMapper.toDto(em.find(Usuario.class, id), new CycleAvoidingMappingContext());
-    }
-
-    @Override
-    public UsuarioDto obtenerUsuarioDto(Long id) {
-        return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.id = :id", Usuario.class)
-                .setParameter("id", id)
-                .getSingleResult(), new CycleAvoidingMappingContext());
-    }
-
-    @Override
-    public UsuarioDto obtenerUsuarioPorCI(String ci) {
-        return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.cedula = :ci", Usuario.class)
-                .setParameter("ci", ci)
-                .getSingleResult(), new CycleAvoidingMappingContext());
-    }
-
-    @Override
-    public List<UsuarioDto> obtenerUsuarios() {
-        return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u", Usuario.class).getResultList(), new CycleAvoidingMappingContext());
-    }
-
-    @Override
-    public List<UsuarioDto> obtenerUsuariosFiltrado(String filtro, Object valor) {
-        System.out.println("SELECT u FROM Usuario u WHERE u." + filtro + " = :valor");
-        System.out.println("valor: " + valor);
-        return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u." + filtro + " = :valor", Usuario.class)
-                .setParameter("valor", valor)
-                .getResultList(), new CycleAvoidingMappingContext());
-    }
-
-    @Override
-    public List<UsuarioDto> obtenerUsuariosPorEstado(Estados estado) {
-        return usuarioMapper.toDto(em.createQuery("SELECT u FROM Usuario u WHERE u.estado = :estado", Usuario.class)
-                .setParameter("estado", estado)
-                .getResultList(), new CycleAvoidingMappingContext());
+        if (!Estados.ACTIVO.equals(user.getEstado())) {
+            throw new WebApplicationException("Cuenta inactiva", Response.Status.UNAUTHORIZED);
         }
 
-    @Override
-    public UsuarioDto login(String usuario, String password) {
-        boolean authenticated = ldapService.authenticate(usuario, password);
-        if (!authenticated) {
-            return null;
-        }
-
-        try {
-            Usuario user = em.createQuery(
-                            "SELECT u FROM Usuario u WHERE u.email = :usuario OR u.nombreUsuario = :usuario",
-                            Usuario.class)
-                    .setParameter("usuario", usuario)
-                    .getSingleResult();
-            return usuarioMapper.toDto(user, new CycleAvoidingMappingContext());
-        } catch (NoResultException e) {
-            return null;
-        }
+        UsuarioDto dto = usuarioMapper.toDto(user, new CycleAvoidingMappingContext());
+        String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
+        dto.setContrasenia(null);
+        return new LoginResponse(token, dto);
     }
 
-    @Override
-    public UsuarioDto findUserByEmail(String email) {
-    try {
-        Usuario usuario = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
-                            .setParameter("email", email)
-                            .getSingleResult();
-        return usuarioMapper.toDto(usuario, new CycleAvoidingMappingContext());
-    } catch (NoResultException e) {
-        return null;
+    private void autenticarLDAP(String usuario, String password) throws NamingException {
+        String ldapUrl = System.getenv("LDAP_URL");
+        String domain = System.getenv("LDAP_DOMAIN");
+
+        Hashtable<String, String> env = new Hashtable<>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, ldapUrl);
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+
+        if (usuario.contains("@")) {
+            env.put(Context.SECURITY_PRINCIPAL, usuario);
+        } else {
+            env.put(Context.SECURITY_PRINCIPAL, domain + "\\" + usuario);
+        }
+
+        env.put(Context.SECURITY_CREDENTIALS, password);
+
+        DirContext ctx = new InitialDirContext(env);
+        ctx.close();
     }
 }
-}
+
+
+
