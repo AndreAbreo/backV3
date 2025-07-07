@@ -11,11 +11,17 @@ import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Context;
+
+//import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -49,7 +55,6 @@ public class UsuarioResource {
                 return Response.status(Response.Status.NOT_FOUND).entity("Usuario no encontrado").build();
             }
 
-            // Actualización de campos simples
             usuarioExistente.setApellido(usuario.getApellido());
             usuarioExistente.setCedula(usuario.getCedula());
             usuarioExistente.setEmail(usuario.getEmail());
@@ -60,15 +65,12 @@ public class UsuarioResource {
             usuarioExistente.setNombre(usuario.getNombre());
             usuarioExistente.setNombreUsuario(usuario.getNombreUsuario());
 
-            // ✅ Conservar o actualizar contraseña
             if (usuario.getContrasenia() != null && !usuario.getContrasenia().isEmpty()) {
                 usuarioExistente.setContrasenia(usuario.getContrasenia());
             }
 
-            // ✅ Agregar o actualizar teléfonos (reemplaza toda la lista)
             usuarioExistente.setUsuariosTelefonos(usuario.getUsuariosTelefonos());
 
-            // Guardar cambios
             er.modificarUsuario(usuarioExistente);
 
             return Response.status(200).build();
@@ -143,74 +145,78 @@ public class UsuarioResource {
     @Path("/login")
     public Response login(LoginRequest loginRequest) {
         if (loginRequest == null) {
-            System.out.println("Request null");
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
         }
-        UsuarioDto user = this.er.login(loginRequest.getUsuario(), loginRequest.getPassword());
 
-        if (user != null) {
+        String email = loginRequest.getUsuario();
+        String password = loginRequest.getPassword();
 
-            String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
+        if (email.endsWith("@hospital.local")) {
+            try {
+                Hashtable<String, String> env = new Hashtable<>();
+                env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+                env.put(javax.naming.Context.PROVIDER_URL, System.getenv("LDAP_URL"));
+                env.put(javax.naming.Context.SECURITY_AUTHENTICATION, "simple");
+                env.put(javax.naming.Context.SECURITY_PRINCIPAL, email);
+                env.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
 
-            user = user.setContrasenia(null);
-            LoginResponse loginResponse = new LoginResponse(token, user);
-            System.out.println("Ingreso correcto");
-            System.out.println(Response.ok(loginResponse).build());
-            return Response.ok(loginResponse).build();
+                DirContext ctx = new InitialDirContext(env);
+                ctx.close();
+
+                UsuarioDto user = this.er.findUserByEmail(email);
+                if (user == null) {
+                    return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Usuario no encontrado\"}").build();
+                }
+
+                String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
+                user = user.setContrasenia(null);
+                LoginResponse loginResponse = new LoginResponse(token, user);
+                return Response.ok(loginResponse).build();
+            } catch (NamingException e) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Autenticación LDAP fallida\"}").build();
+            }
         } else {
-            System.out.println("login unautorized invalid credentials");
-            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
+            UsuarioDto user = this.er.login(email, password);
+            if (user != null) {
+                String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
+                user = user.setContrasenia(null);
+                LoginResponse loginResponse = new LoginResponse(token, user);
+                return Response.ok(loginResponse).build();
+            } else {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
+            }
         }
     }
 
     @POST
-@Path("/google-login")
-public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
-        System.out.println("Solicitud recibida para google-login con email: " + googleLoginRequest.getEmail());
-    if (googleLoginRequest == null || googleLoginRequest.getEmail() == null) {
-        return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
-    }
+    @Path("/google-login")
+    public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
+        if (googleLoginRequest == null || googleLoginRequest.getEmail() == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
+        }
 
-    UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
+        UsuarioDto user = this.er.findUserByEmail(googleLoginRequest.getEmail());
         if (user == null) {
-            // Usuario no registrado → informar que necesita registrarse
-            return Response.ok(Map.of(
-                    "userNeedsAdditionalInfo", true
-            )).build();
+            return Response.ok(Map.of("userNeedsAdditionalInfo", true)).build();
         }
         if (!user.getEstado().equals(Estados.ACTIVO)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of("error", "Cuenta inactiva, por favor contacte al administrador"))
-                    .build();
+            return Response.status(Response.Status.FORBIDDEN).entity(Map.of("error", "Cuenta inactiva, por favor contacte al administrador")).build();
         }
 
         String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
         user = user.setContrasenia(null);
-
         GoogleLoginResponse loginResponse = new GoogleLoginResponse(token, false, user);
         return Response.ok(loginResponse).build();
-}
-
+    }
 
     public static class LoginRequest {
         private String usuario;
         private String password;
 
-        public String getUsuario() {
-            return usuario;
-        }
-
-        public void setUsuario(String usuario) {
-            this.usuario = usuario;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
+        public String getUsuario() { return usuario; }
+        public void setUsuario(String usuario) { this.usuario = usuario; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
     }
 
     public static class LoginResponse {
@@ -222,79 +228,38 @@ public Response googleLogin(GoogleLoginRequest googleLoginRequest) {
             this.user = user;
         }
 
-        public String getToken() {
-            return token;
-        }
-
-        public void setToken(String token) {
-            this.token = token;
-        }
-
-        public UsuarioDto getUser() {
-            return user;
-        }
-
-        public void setUser(UsuarioDto user) {
-            this.user = user;
-        }
+        public String getToken() { return token; }
+        public void setToken(String token) { this.token = token; }
+        public UsuarioDto getUser() { return user; }
+        public void setUser(UsuarioDto user) { this.user = user; }
     }
 
     public static class GoogleLoginRequest {
         private String email;
         private String name;
 
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
     }
 
     public static class GoogleLoginResponse {
         private String token;
         private boolean userNeedsAdditionalInfo;
-        private UsuarioDto user; // Añade este campo
+        private UsuarioDto user;
 
-        // Constructor
         public GoogleLoginResponse(String token, boolean userNeedsAdditionalInfo, UsuarioDto user) {
             this.token = token;
             this.userNeedsAdditionalInfo = userNeedsAdditionalInfo;
             this.user = user;
         }
 
-        // Getters y setters
-        public String getToken() {
-            return token;
-        }
-
-        public void setToken(String token) {
-            this.token = token;
-        }
-
-        public boolean isUserNeedsAdditionalInfo() {
-            return userNeedsAdditionalInfo;
-        }
-
-        public void setUserNeedsAdditionalInfo(boolean userNeedsAdditionalInfo) {
-            this.userNeedsAdditionalInfo = userNeedsAdditionalInfo;
-        }
-
-        public UsuarioDto getUser() {
-            return user;
-        }
-
-        public void setUser(UsuarioDto user) {
-            this.user = user;
-        }
+        public String getToken() { return token; }
+        public void setToken(String token) { this.token = token; }
+        public boolean isUserNeedsAdditionalInfo() { return userNeedsAdditionalInfo; }
+        public void setUserNeedsAdditionalInfo(boolean userNeedsAdditionalInfo) { this.userNeedsAdditionalInfo = userNeedsAdditionalInfo; }
+        public UsuarioDto getUser() { return user; }
+        public void setUser(UsuarioDto user) { this.user = user; }
     }
 }

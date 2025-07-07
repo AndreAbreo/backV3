@@ -44,7 +44,6 @@ public class LdapTestResource {
         env.put(Context.PROVIDER_URL, ldapUrl);
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
 
-
         if (usuario.contains("@")) {
             env.put(Context.SECURITY_PRINCIPAL, usuario);
         } else {
@@ -56,4 +55,5 @@ public class LdapTestResource {
         ctx.close();
     }
 }
+
 
