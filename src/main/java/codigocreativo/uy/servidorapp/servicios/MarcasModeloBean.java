@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Stateless
 public class MarcasModeloBean implements MarcasModeloRemote {
-    @PersistenceContext(unitName = "default")
+    @PersistenceContext(unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject

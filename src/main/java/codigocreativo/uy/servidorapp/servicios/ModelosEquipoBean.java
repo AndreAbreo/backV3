@@ -12,7 +12,7 @@ import java.util.List;
 
 @Stateless
 public class ModelosEquipoBean implements ModelosEquipoRemote {
-    @PersistenceContext(unitName = "default")
+    @PersistenceContext(unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject

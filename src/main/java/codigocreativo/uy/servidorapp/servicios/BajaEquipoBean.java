@@ -14,7 +14,7 @@ import org.mapstruct.Context;
 import java.util.List;
 @Stateless
 public class BajaEquipoBean implements BajaEquipoRemote {
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext (unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject

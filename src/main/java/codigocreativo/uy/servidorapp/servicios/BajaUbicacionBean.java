@@ -25,7 +25,7 @@ import java.util.List;
 @TransactionManagement(TransactionManagementType.BEAN)
 @Stateless
 public class BajaUbicacionBean implements BajaUbicacionRemote {
-    @PersistenceContext(unitName = "default")
+    @PersistenceContext(unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject
