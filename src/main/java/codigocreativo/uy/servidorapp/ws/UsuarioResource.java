@@ -11,17 +11,16 @@ import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Context;
 
-//import javax.naming.Context;
-import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
+
+import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Path("/usuarios")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -29,6 +28,7 @@ import javax.naming.directory.InitialDirContext;
 public class UsuarioResource {
     @EJB
     private UsuarioRemote er;
+
     @EJB
     private JwtService jwtService;
 
@@ -82,7 +82,7 @@ public class UsuarioResource {
     }
 
     @PUT
-    @Path("Inactivar")
+    @Path("/Inactivar")
     public Response inactivarUsuario(UsuarioDto usuario){
         this.er.eliminarUsuario(usuario);
         return Response.status(200).build();
@@ -144,48 +144,61 @@ public class UsuarioResource {
     @POST
     @Path("/login")
     public Response login(LoginRequest loginRequest) {
-        if (loginRequest == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
-        }
+        System.out.println("LDAP_URL env: " + System.getenv("LDAP_URL"));
 
         String email = loginRequest.getUsuario();
         String password = loginRequest.getPassword();
 
+        System.out.println("\uD83D\uDD10 Intentando login con: " + email);
+
         if (email.endsWith("@hospital.local")) {
+            System.out.println("➡️ Usuario con dominio hospital.local, intentando autenticación LDAP...");
+
             try {
                 Hashtable<String, String> env = new Hashtable<>();
-                env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-                env.put(javax.naming.Context.PROVIDER_URL, System.getenv("LDAP_URL"));
-                env.put(javax.naming.Context.SECURITY_AUTHENTICATION, "simple");
-                env.put(javax.naming.Context.SECURITY_PRINCIPAL, email);
-                env.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
+                env.put("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
+                env.put("java.naming.provider.url", System.getenv("LDAP_URL"));
+                env.put("java.naming.security.authentication", "simple");
+                env.put("java.naming.security.principal", email);
+                env.put("java.naming.security.credentials", password);
 
                 DirContext ctx = new InitialDirContext(env);
                 ctx.close();
 
-                UsuarioDto user = this.er.findUserByEmail(email);
-                if (user == null) {
-                    return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Usuario no encontrado\"}").build();
-                }
-
-                String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
-                user = user.setContrasenia(null);
-                LoginResponse loginResponse = new LoginResponse(token, user);
-                return Response.ok(loginResponse).build();
-            } catch (NamingException e) {
-                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Autenticación LDAP fallida\"}").build();
-            }
-        } else {
-            UsuarioDto user = this.er.login(email, password);
-            if (user != null) {
-                String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
-                user = user.setContrasenia(null);
-                LoginResponse loginResponse = new LoginResponse(token, user);
-                return Response.ok(loginResponse).build();
-            } else {
-                return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
+                System.out.println("✅ Autenticación LDAP exitosa.");
+            } catch (Exception e) {
+                System.out.println("❌ Falló autenticación LDAP: " + e.getMessage());
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\": \"Credenciales inválidas (LDAP)\"}")
+                        .build();
             }
         }
+
+        UsuarioDto user = this.er.findUserByEmail(email);
+
+        if (user == null) {
+            System.out.println("❌ Usuario no encontrado en la base de datos: " + email);
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\": \"Usuario no encontrado\"}")
+                    .build();
+        }
+
+        if (!user.getEstado().equals("ACTIVO")) {
+            System.out.println("❌ Usuario inactivo: " + user.getEmail());
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\": \"Cuenta inactiva\"}")
+                    .build();
+        }
+
+        String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
+        user = user.setContrasenia(null);
+
+        System.out.println("✅ Login exitoso: " + user.getEmail());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("user", user);
+        response.put("token", token);
+        return Response.ok(response).build();
     }
 
     @POST
