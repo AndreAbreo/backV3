@@ -19,6 +19,7 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import java.util.Hashtable;
 
@@ -65,8 +66,9 @@ public class UsuarioBean {
     }
 
     private void autenticarLDAP(String usuario, String password) throws NamingException {
-        String ldapUrl = System.getenv("LDAP_URL");
-        String domain = System.getenv("LDAP_DOMAIN");
+        Dotenv dotenv = Dotenv.load();
+        String ldapUrl = dotenv.get("LDAP_URL");
+        String domain = dotenv.get("LDAP_DOMAIN");
 
         Hashtable<String, String> env = new Hashtable<>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");

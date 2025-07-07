@@ -15,7 +15,7 @@ import jakarta.persistence.PersistenceContext;
 import java.util.List;
 @Stateless
 public class PaisBean implements PaisRemote{
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext (unitName = "servidorappPU")
     private EntityManager em;
     @Inject
     private PaisMapper paisMapper;

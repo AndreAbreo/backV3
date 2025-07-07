@@ -11,7 +11,7 @@ import jakarta.persistence.PersistenceContext;
 import java.util.List;
 @Stateless
 public class PermisoBean implements PermisoRemote{
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext (unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject

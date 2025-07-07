@@ -13,7 +13,7 @@ import java.util.List;
 
 @Stateless
 public class ProveedoresEquipoBean implements ProveedoresEquipoRemote{
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext (unitName = "servidorappPU")
     private EntityManager em;
     @Inject
     private ProveedoresEquipoMapper proveedoresEquipoMapper;

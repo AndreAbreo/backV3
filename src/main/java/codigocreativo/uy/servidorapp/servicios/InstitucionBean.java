@@ -12,7 +12,7 @@ import java.util.List;
 @Stateless
 public class InstitucionBean implements InstitucionRemote{
 
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext (unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject //Se inyecta el mapper

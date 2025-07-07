@@ -22,6 +22,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.naming.NamingException;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import java.util.List;
 
@@ -193,8 +194,9 @@ public class UsuarioResource {
     }
 
     private void autenticarLDAP(String usuario, String password) throws NamingException {
-        String ldapURL = System.getenv("LDAP_URL");
-        String domain = System.getenv("LDAP_DOMAIN");
+        Dotenv dotenv = Dotenv.load();
+        String ldapURL = dotenv.get("LDAP_URL");
+        String domain = dotenv.get("LDAP_DOMAIN");
 
         java.util.Hashtable<String, String> env = new java.util.Hashtable<>();
         env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");

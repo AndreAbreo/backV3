@@ -15,7 +15,7 @@ import java.util.Set;
 
 @Stateless
 public class PerfilBean implements PerfilRemote {
-    @PersistenceContext(unitName = "default")
+    @PersistenceContext(unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject

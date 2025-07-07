@@ -11,7 +11,7 @@ import jakarta.persistence.PersistenceContext;
 @Stateless
 
 public class OperacionBean implements OperacionRemote{
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext (unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject

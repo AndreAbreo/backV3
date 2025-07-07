@@ -14,7 +14,7 @@ import java.util.List;
 
 @Stateless
 public class UsuariosTelefonoBean implements UsuariosTelefonoRemote{
-    @PersistenceContext (unitName = "default")
+    @PersistenceContext (unitName = "servidorappPU")
     private EntityManager em;
 
     @Inject
