@@ -12,8 +12,6 @@ import codigocreativo.uy.servidorapp.excepciones.ServiciosException;
 
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.ejb.TransactionManagement;
-import jakarta.ejb.TransactionManagementType;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -22,7 +20,6 @@ import jakarta.transaction.Transactional;
 import java.io.Serializable;
 import java.util.List;
 
-@TransactionManagement(TransactionManagementType.BEAN)
 @Stateless
 public class BajaUbicacionBean implements BajaUbicacionRemote {
     @PersistenceContext(unitName = "servidorappPU")
