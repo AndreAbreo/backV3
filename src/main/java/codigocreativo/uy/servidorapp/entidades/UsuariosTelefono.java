@@ -2,9 +2,13 @@ package codigocreativo.uy.servidorapp.entidades;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "USUARIOS_TELEFONOS")
-public class UsuariosTelefono {
+public class UsuariosTelefono implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_TELEFONO", nullable = false)
