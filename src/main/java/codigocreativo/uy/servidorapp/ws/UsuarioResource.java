@@ -2,6 +2,7 @@ package codigocreativo.uy.servidorapp.ws;
 
 import codigocreativo.uy.servidorapp.DTO.PerfilDto;
 import codigocreativo.uy.servidorapp.DTO.UsuarioDto;
+import codigocreativo.uy.servidorapp.JWT.LdapService;
 import codigocreativo.uy.servidorapp.enumerados.Estados;
 import codigocreativo.uy.servidorapp.JWT.JwtService;
 import codigocreativo.uy.servidorapp.servicios.PerfilRemote;
@@ -142,26 +143,40 @@ public class UsuarioResource {
     @POST
     @Path("/login")
     public Response login(LoginRequest loginRequest) {
+
         if (loginRequest == null) {
             System.out.println("Request null");
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\":\"Pedido de login nulo\"}").build();
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"Pedido de login nulo\"}")
+                    .build();
         }
+
+        // Validar existencia en Active Directory
+        LdapService ldapService = new LdapService();
+        if (!ldapService.usuarioExistePorPrincipal(loginRequest.getUsuario())) {
+            System.out.println("Usuario no encontrado en el AD: " + loginRequest.getUsuario());
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Usuario no autorizado (fuera del AD)\"}")
+                    .build();
+        }
+
+        // Continuar con la lógica de validación en base de datos
         UsuarioDto user = this.er.login(loginRequest.getUsuario(), loginRequest.getPassword());
 
         if (user != null) {
-
             String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getIdPerfil().getNombrePerfil());
-
             user = user.setContrasenia(null);
             LoginResponse loginResponse = new LoginResponse(token, user);
             System.out.println("Ingreso correcto");
-            System.out.println(Response.ok(loginResponse).build());
             return Response.ok(loginResponse).build();
         } else {
-            System.out.println("login unautorized invalid credentials");
-            return Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"Datos de acceso incorrectos\"}").build();
+            System.out.println("Login fallido: credenciales inválidas");
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Datos de acceso incorrectos\"}")
+                    .build();
         }
     }
+
 
     @POST
     @Path("/google-login")

@@ -35,7 +35,7 @@ public class LdapService {
         adminPassword = props.getProperty("LDAP_ADMIN_PASS");
     }
 
-    public boolean usuarioExiste(String userToSearch) {
+    public boolean usuarioExistePorPrincipal(String userPrincipalName) {
         Hashtable<String, String> env = new Hashtable<>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, ldapURL);
@@ -45,8 +45,7 @@ public class LdapService {
 
         try {
             DirContext ctx = new InitialDirContext(env);
-
-            String searchFilter = "(sAMAccountName=" + userToSearch + ")";
+            String searchFilter = "(userPrincipalName=" + userPrincipalName + ")";
             SearchControls controls = new SearchControls();
             controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
@@ -55,9 +54,11 @@ public class LdapService {
 
             return results.hasMore();
         } catch (NamingException e) {
-            System.err.println("⛔ LDAP error: " + e.getMessage());
+            System.err.println("⛔ Error buscando en LDAP: " + e.getMessage());
             return false;
         }
     }
+
 }
+
 
