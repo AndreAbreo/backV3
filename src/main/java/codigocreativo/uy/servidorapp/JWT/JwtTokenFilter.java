@@ -30,10 +30,16 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         System.out.println("Obteniendo path: " + path);
 
         // Permitir acceso sin token JWT a endpoints específicos
-        if (path.startsWith("/usuarios/login") || path.startsWith("/usuarios/google-login") ||
-                path.startsWith("/usuarios/crear") || path.startsWith("/api/status")) {
-            return;  // Permitir acceso sin token JWT
+        if (path.startsWith("/usuarios/login")
+                || path.startsWith("/usuarios/google-login")
+                || path.startsWith("/usuarios/crear")
+                || path.startsWith("/api/status")
+                || path.startsWith("/ldap/check-user")) {
+            System.out.println("Path capturado por el filtro JWT: " + path);
+
+            return;
         }
+
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             System.out.println("No se encontró encabezado de autorización o no comienza con 'Bearer'");
