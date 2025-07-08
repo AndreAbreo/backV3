@@ -32,6 +32,7 @@ public class JwtTokenFilter implements ContainerRequestFilter {
         // Permitir acceso sin token JWT a endpoints específicos
         if (path.startsWith("/usuarios/login")
                 || path.startsWith("/usuarios/google-login")
+                || path.startsWith("/usuarios/login-comun")
                 || path.startsWith("/usuarios/crear")
                 || path.startsWith("/api/status")
                 || path.startsWith("/ldap/check-user")) {

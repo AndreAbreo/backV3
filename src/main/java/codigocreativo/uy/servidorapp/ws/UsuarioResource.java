@@ -177,6 +177,37 @@ public class UsuarioResource {
         }
     }
 
+    @POST
+    @Path("/login-comun")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response loginComun(LoginRequest loginRequest) {
+
+        if (loginRequest == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"Pedido de login nulo\"}")
+                    .build();
+        }
+
+        UsuarioDto user = this.er.login(loginRequest.getUsuario(), loginRequest.getPassword());
+
+        if (user != null) {
+            String token = jwtService.generateToken(
+                    user.getEmail(),
+                    user.getId(),
+                    user.getIdPerfil().getNombrePerfil()
+            );
+
+            user = user.setContrasenia(null);
+            LoginResponse loginResponse = new LoginResponse(token, user);
+            return Response.ok(loginResponse).build();
+        } else {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Datos de acceso incorrectos\"}")
+                    .build();
+        }
+    }
+
 
     @POST
     @Path("/google-login")
