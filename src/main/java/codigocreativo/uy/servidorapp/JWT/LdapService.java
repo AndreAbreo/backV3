@@ -45,7 +45,8 @@ public class LdapService {
 
         try {
             DirContext ctx = new InitialDirContext(env);
-            String searchFilter = "(userPrincipalName=" + userPrincipalName + ")";
+            String searchFilter = "(&(userPrincipalName=" + userPrincipalName + ")(memberOf=CN=Grupo_App_Users,DC=hospital,DC=local))";
+
             SearchControls controls = new SearchControls();
             controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
